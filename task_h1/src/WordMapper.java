@@ -1,21 +1,38 @@
-import org.apache.hadoop.io.*;
-import org.apache.hadoop.mapreduce.*;
-import org.apache.hadoop.mapreduce.lib.input.*;
-import org.apache.hadoop.mapreduce.lib.output.*;
-import org.apache.hadoop.util.*;
+import java.io.IOException;
+import java.io.StringReader;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
-import java.io.*;
-import java.util.*;
+public class WordMapper extends Mapper<Object, Text, Text, IntWritable> {
+    private StandardAnalyzer analyzer;
+    private final static IntWritable one = new IntWritable(1);
 
-public class WordMapper
-extends Mapper<Object, Text, Text, IntWritable>
-{
-    public void map(Object key, Text value, Context context)
-	throws IOException, InterruptedException
-	{
-        StringTokenizer itr = new StringTokenizer(value.toString());
-        while (itr.hasMoreTokens()) {
-            context.write(new Text(itr.nextToken()), new IntWritable(1));
+    @Override
+    protected void setup(Context context) {
+        analyzer = new StandardAnalyzer();
+    }
+
+    @Override
+    protected void map(Object key, Text value, Context context) throws IOException, InterruptedException {
+        try (TokenStream tokenStream = analyzer.tokenStream(null, new StringReader(value.toString()))) {
+            CharTermAttribute attr = tokenStream.addAttribute(CharTermAttribute.class);
+            tokenStream.reset();
+
+            while (tokenStream.incrementToken()) {
+                String token = attr.toString();
+                context.write(new Text(token), one);
+            }
+
+            tokenStream.end();
         }
+    }
+
+    @Override
+    protected void cleanup(Context context) throws IOException {
+        analyzer.close();
     }
 }
