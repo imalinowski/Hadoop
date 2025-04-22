@@ -7,9 +7,10 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
-public class WordMapper extends Mapper<Object, Text, Text, IntWritable> {
+public class WordMapper extends Mapper<Object, Text, IntWritable, IntWritable> {
     private StandardAnalyzer analyzer;
     private final static IntWritable one = new IntWritable(1);
+    private final IntWritable wordLength = new IntWritable();
 
     @Override
     protected void setup(Context context) {
@@ -24,7 +25,8 @@ public class WordMapper extends Mapper<Object, Text, Text, IntWritable> {
 
             while (tokenStream.incrementToken()) {
                 String token = attr.toString();
-                context.write(new Text(token), one);
+                wordLength.set(token.length()); // вместо слова берем его длину
+                context.write(wordLength, one);
             }
 
             tokenStream.end();

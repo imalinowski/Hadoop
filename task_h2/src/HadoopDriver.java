@@ -19,25 +19,31 @@ public class HadoopDriver extends Configured implements Tool {
     public int run(String[] args) throws Exception {
 
         if (args.length != 2) {
-			ToolRunner.printGenericCommandUsage(System.err);
+            ToolRunner.printGenericCommandUsage(System.err);
             System.err.println("USAGE: hadoop jar ... <input-dir> <output-dir>");
             System.exit(1);
         }
 
-		Job job = Job.getInstance(getConf());
+        Job job = Job.getInstance(getConf());
         job.setJarByClass(HadoopDriver.class);
-		job.setJobName("WordCounter");
+        job.setJobName("WordLengthCounter");
+
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
-		job.setMapperClass(WordMapper.class);
-		job.setReducerClass(Summer.class);
-		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(IntWritable.class);
+
+        job.setMapperClass(WordMapper.class);
+        job.setReducerClass(Summer.class);
+
+        // Ключ теперь IntWritable, а не Text
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(IntWritable.class);
+
+        job.setOutputKeyClass(IntWritable.class);
+        job.setOutputValueClass(IntWritable.class);
 
         System.out.println("Input dirs: " + Arrays.toString(FileInputFormat.getInputPaths(job)));
         System.out.println("Output dir: " + FileOutputFormat.getOutputPath(job));
 
         return job.waitForCompletion(true) ? 0 : 1;
     }
-
 }
