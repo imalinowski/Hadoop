@@ -32,14 +32,11 @@ public class HadoopDriver extends Configured implements Tool {
         FileOutputFormat.setOutputPath(job, new Path(args[1]));
 
         job.setMapperClass(WordMapper.class);
-        job.setReducerClass(Summer.class);
+        job.setReducerClass(WordReducer.class);
 
-        // Ключ теперь IntWritable, а не Text
-        job.setMapOutputKeyClass(IntWritable.class);
-        job.setMapOutputValueClass(IntWritable.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
 
-        job.setOutputKeyClass(IntWritable.class);
-        job.setOutputValueClass(IntWritable.class);
 
         System.out.println("Input dirs: " + Arrays.toString(FileInputFormat.getInputPaths(job)));
         System.out.println("Output dir: " + FileOutputFormat.getOutputPath(job));
